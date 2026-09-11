@@ -33,10 +33,10 @@
     max-width:560px;margin-inline:auto;display:flex;flex-direction:column;gap:22px;
   }
 
-  .top{display:flex;justify-content:space-between;align-items:baseline;color:var(--muted)}
+  .top{display:flex;justify-content:space-between;align-items:baseline;color:var(--muted);gap:24px}
   .top .fecha{font-size:17px}
   .top .ahora{font-family:var(--mono);font-size:17px;color:var(--ink)}
-  .ahora .sec{font-size:.56em;color:var(--muted);opacity:.2;margin-left:2px}
+  .ahora .sec{font-size:.56em;color:var(--muted);opacity:.15;margin-left:2px}
 
   .estado{margin-top:4px}
   .estado .rotulo{font-size:22px;color:var(--muted);margin-bottom:6px}
@@ -45,7 +45,7 @@
     font-size:clamp(46px,15vw,88px);color:var(--accent);
     font-variant-numeric:tabular-nums;letter-spacing:-1px;
   }
-  .estado .grande .sec{font-size:.4em;color:var(--muted);opacity:.13;margin-left:6px;letter-spacing:0}
+  .estado .grande .sec{font-size:.4em;color:var(--muted);opacity:.1;margin-left:6px;letter-spacing:0}
   .estado .sub{margin-top:12px;color:var(--muted);font-size:16px;line-height:1.55}
   .estado .sub b{color:var(--ink);font-weight:600}
 
@@ -135,7 +135,12 @@
 
   body.focus{justify-content:center;gap:34px}
   body.focus .top{justify-content:center}
-  body.focus section,body.focus details.panel,body.focus .barra-inf,body.focus .footer{display:none}
+  body.focus details.panel,body.focus .barra-inf,body.focus .footer{display:none}
+  body.focus #zTimers h2,body.focus #zTimers>.row{display:none}
+  body.focus #zTimers .card.done{display:none}
+  body.focus #zTimers{text-align:center;max-width:520px;margin-inline:auto}
+  body.focus #zTimers .card{justify-content:center;gap:18px}
+  body.focus #zTimers .card .icon-btn{display:none}
   body.focus .progreso.on{display:block;width:min(320px,80vw);margin-inline:auto}
   body.focus .estado{text-align:center}
   #salirFocus{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:30}
@@ -160,6 +165,25 @@
   #tutBox .tb-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px}
   #tutBox .tb-x{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);
     font-size:22px;cursor:pointer;font-family:var(--serif);line-height:1}
+  .hero{display:flex;flex-direction:column;gap:22px}
+  @media (min-width:760px){
+    body{max-width:940px;gap:28px}
+    .top .fecha,.top .ahora{font-size:21px}
+    .estado .rotulo{font-size:28px}
+    .estado .grande{font-size:clamp(64px,9vw,108px)}
+    .estado .sub{font-size:19px}
+    section h2{font-size:23px}
+    .card .txt .lbl{font-size:20px}
+    .card .n{font-size:25px}
+    .card .txt .meta{font-size:15px}
+    .dia .nom{font-size:17px}
+    details.panel>summary{font-size:20px}
+    input,button,select{font-size:17px}
+    .hero{flex-direction:row;align-items:center;gap:44px}
+    .hero .estado{flex:1;min-width:0}
+    .hero .dial-wrap{flex:0 0 auto}
+    svg.dial{width:300px}
+  }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -181,6 +205,7 @@
     <div class="ahora" id="ahora">--:--</div>
   </div>
 
+  <div class="hero">
   <div class="estado" id="zEstado">
     <div class="rotulo" id="rotulo">Cargando…</div>
     <div class="grande" id="grande">--</div>
@@ -202,6 +227,7 @@
       <line class="hand-s" id="hs" x1="100" y1="100" x2="100" y2="30"/>
       <circle class="dot" cx="100" cy="100" r="4"/>
     </svg>
+  </div>
   </div>
 
   <section id="zTimers">
@@ -492,11 +518,11 @@ function bindColor(id,key){
 bindColor('cAccent','accent'); bindColor('cBg','bg');
 document.getElementById('resetColor').onclick=()=>{state.colors={...DEFAULT.colors};save();applyColors();};
 document.getElementById('savePreset').onclick=()=>{
-  const nombre=prompt('Nombre de la combinación (por sus tonos):');
-  if(!nombre) return;
+  const inp=document.getElementById('presetName'), nombre=inp.value.trim();
+  if(!nombre){ inp.focus(); return; }
   state.palettes=state.palettes.filter(p=>p.name.toLowerCase()!==nombre.toLowerCase());
   state.palettes.push({name:nombre,accent:state.colors.accent,bg:state.colors.bg});
-  save(); applyColors();
+  inp.value=''; save(); applyColors();
 };
 
 /* ===== Exportar / importar ===== */
