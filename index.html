@@ -89,6 +89,7 @@
     background:var(--surface);border:1px solid var(--line);border-radius:10px;
     padding:11px 12px;color:var(--ink);min-width:0}
   input[type=text]{flex:1}
+  select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--ink)}
   input[type=color]{width:48px;height:40px;border:1px solid var(--line);border-radius:10px;
     background:var(--surface);padding:2px;cursor:pointer}
   button.primary{background:var(--accent);color:#14161d;border:none;border-radius:10px;
@@ -128,6 +129,7 @@
   .preset .dot2{width:14px;height:14px;border-radius:50%}
   .preset.active{border-color:var(--accent)}
 
+  .toggle-row{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:15px;color:var(--ink)}
   .barra-inf{display:flex;gap:10px;flex-wrap:wrap}
   .footer{color:var(--muted);font-size:13px;font-family:var(--mono);text-align:center;
     display:flex;justify-content:center;align-items:center;gap:14px}
@@ -143,6 +145,8 @@
   body.focus #zTimers .card .icon-btn{display:none}
   body.focus .progreso.on{display:block;width:min(320px,80vw);margin-inline:auto}
   body.focus .estado{text-align:center}
+  body.focus svg.dial{width:min(46vh,440px)}
+  body.focus .estado .grande{font-size:clamp(72px,11vw,132px)}
   #salirFocus{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:30}
   body.focus #salirFocus{display:inline-flex}
 
@@ -210,6 +214,7 @@
     <div class="rotulo" id="rotulo">Cargando…</div>
     <div class="grande" id="grande">--</div>
     <div class="sub" id="sub"></div>
+    <div class="sub" id="subNext" style="display:none"></div>
     <div class="progreso" id="progreso">
       <div class="track"><div class="fill" id="progFill"></div></div>
       <div class="pct" id="progPct"></div>
@@ -237,6 +242,13 @@
       <input type="text" id="nvLbl" placeholder="Ej.: ver a mi novio" maxlength="40" list="sug">
       <datalist id="sug"></datalist>
       <input type="datetime-local" id="nvFecha">
+      <select id="nvRecur" aria-label="Repetición">
+        <option value="none">Una vez</option>
+        <option value="daily">Cada día</option>
+        <option value="weekly">Cada semana</option>
+        <option value="monthly">Cada mes</option>
+        <option value="yearly">Cada año</option>
+      </select>
       <button class="primary" id="addTimer">Añadir</button>
     </div>
   </section>
@@ -246,6 +258,8 @@
     <div class="body">
       <div class="dias" id="dias"></div>
       <div class="vacio">Activa cada día y pon la hora de entrada y de salida. Se guarda solo.</div>
+      <label class="toggle-row"><span>Mostrar cuánto falta para el próximo día de trabajo</span>
+        <span class="sw"><input type="checkbox" id="tgNext"><span class="knob"></span></span></label>
     </div>
   </details>
 
@@ -297,7 +311,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='1.1';
+const VER_NUM='1.2';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -320,7 +334,7 @@ const DEFAULT={
     mar:{on:true,in:'09:00',out:'17:00'}, mie:{on:true,in:'09:00',out:'17:00'},
     jue:{on:true,in:'09:00',out:'17:00'}, vie:{on:true,in:'09:00',out:'17:00'},
     sab:{on:false,in:'09:00',out:'17:00'} },
-  timers:[], labelsUsed:[], tutorialSeen:false
+  timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false
 };
 let state=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),store.get()||{});
 DIAS.forEach(([k])=>{ state.schedule[k]=Object.assign({on:false,in:'09:00',out:'17:00'},state.schedule[k]||{}); });
@@ -352,6 +366,23 @@ function workdaysLeft(now){
     const d=new Date(now.getFullYear(),now.getMonth(),day);
     if(state.schedule[keyOf(d)].on) n++;
   } return n;
+}
+function nextWorkday(from){
+  for(let i=1;i<9;i++){
+    const d=new Date(from); d.setDate(d.getDate()+i);
+    const cfg=state.schedule[keyOf(d)]; if(cfg&&cfg.on) return atToday(d,cfg.in);
+  } return null;
+}
+function nextOccur(t,now){
+  let d=new Date(t.target); const r=t.recur||'none';
+  if(r==='none') return d;
+  while(d<=now){
+    if(r==='daily') d.setDate(d.getDate()+1);
+    else if(r==='weekly') d.setDate(d.getDate()+7);
+    else if(r==='monthly') d.setMonth(d.getMonth()+1);
+    else if(r==='yearly') d.setFullYear(d.getFullYear()+1);
+    else break;
+  } return d;
 }
 function computePrimary(now){
   const cfg=state.schedule[keyOf(now)];
@@ -428,6 +459,12 @@ function render(){
     rot.textContent='Sin turnos'; big.textContent='—';
     sub.innerHTML='Configura tu horario laboral abajo.'; prog.classList.remove('on');
   }
+  const sn=document.getElementById('subNext');
+  if(state.showNextWorkday){
+    const nw=nextWorkday(now);
+    if(nw){ sn.style.display='block'; sn.innerHTML=`Próximo día de trabajo: ${DIASL[nw.getDay()]} · en <b>${fmt(nw-now).main}</b>`; }
+    else sn.style.display='none';
+  } else sn.style.display='none';
   setHands(now); drawWedge(now,prim); renderTimers(now);
   requestAnimationFrame(loop);
 }
@@ -436,22 +473,34 @@ function loop(){ const s=Math.floor(Date.now()/200); if(s!==last){ last=s; rende
 
 /* ===== Cuentas puntuales ===== */
 const TRASH='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+const RECUR_TXT={none:'',daily:'cada día',weekly:'cada semana',monthly:'cada mes',yearly:'cada año'};
+const DUP='<svg viewBox="0 0 24 24"><path d="M9 9h11v11H9zM5 15H4V4h11v1"/></svg>';
 function renderTimers(now){
   const cont=document.getElementById('lista');
   if(!state.timers.length){ cont.innerHTML='<div class="vacio">Aún no hay cuentas puntuales. Añade una abajo.</div>'; return; }
-  const ord=[...state.timers].sort((a,b)=>new Date(a.target)-new Date(b.target));
+  const withT=state.timers.map(t=>({t,occ:nextOccur(t,now)}));
+  withT.sort((a,b)=>a.occ-b.occ);
   cont.innerHTML='';
-  ord.forEach(t=>{
-    const target=new Date(t.target), diff=target-now, done=diff<=0,
-      f=target.toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-    const o=fmt(diff), card=document.createElement('div'); card.className='card'+(done?' done':'');
-    card.innerHTML=`<div class="txt"><div class="lbl">${esc(t.label)}</div><div class="meta">${f}</div></div>
+  withT.forEach(({t,occ})=>{
+    const recur=t.recur&&t.recur!=='none', diff=occ-now, done=diff<=0&&!recur,
+      f=occ.toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),
+      rtxt=recur?` · ${RECUR_TXT[t.recur]}`:'', o=fmt(diff);
+    const card=document.createElement('div'); card.className='card'+(done?' done':'');
+    card.innerHTML=`<div class="txt"><div class="lbl">${esc(t.label)}</div><div class="meta">${f}${rtxt}</div></div>
       <div class="n">${done?'Cumplido':o.main}</div>
-      <button class="icon-btn" data-id="${t.id}" aria-label="Borrar">${TRASH}</button>`;
+      <button class="icon-btn dup" data-id="${t.id}" aria-label="Duplicar para otra fecha">${DUP}</button>
+      <button class="icon-btn del" data-id="${t.id}" aria-label="Borrar">${TRASH}</button>`;
     cont.appendChild(card);
   });
-  cont.querySelectorAll('.icon-btn').forEach(b=>b.onclick=()=>{
+  cont.querySelectorAll('.del').forEach(b=>b.onclick=()=>{
     state.timers=state.timers.filter(x=>x.id!==b.dataset.id); save(); renderTimers(new Date()); });
+  cont.querySelectorAll('.dup').forEach(b=>b.onclick=()=>{
+    const t=state.timers.find(x=>x.id===b.dataset.id); if(!t) return;
+    document.getElementById('nvLbl').value=t.label;
+    document.getElementById('nvRecur').value=t.recur||'none';
+    document.getElementById('nvFecha').focus();
+    document.getElementById('zTimers').scrollIntoView({block:'center'});
+  });
 }
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function buildSug(){
@@ -460,12 +509,13 @@ function buildSug(){
   document.getElementById('sug').innerHTML=all.map(v=>`<option value="${esc(v)}">`).join('');
 }
 document.getElementById('addTimer').onclick=()=>{
-  const lbl=document.getElementById('nvLbl').value.trim(), f=document.getElementById('nvFecha').value;
+  const lbl=document.getElementById('nvLbl').value.trim(), f=document.getElementById('nvFecha').value,
+        recur=document.getElementById('nvRecur').value;
   if(!lbl||!f) return;
-  state.timers.push({id:String(Date.now()),label:lbl,target:new Date(f).toISOString()});
+  state.timers.push({id:String(Date.now()),label:lbl,target:new Date(f).toISOString(),recur});
   if(!state.labelsUsed.includes(lbl)) state.labelsUsed.unshift(lbl);
   state.labelsUsed=state.labelsUsed.slice(0,20); save(); buildSug();
-  document.getElementById('nvLbl').value=''; document.getElementById('nvFecha').value='';
+  document.getElementById('nvLbl').value=''; document.getElementById('nvFecha').value=''; document.getElementById('nvRecur').value='none';
   renderTimers(new Date());
 };
 
@@ -483,6 +533,9 @@ function buildDias(){
   cont.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
     const {k,f}=inp.dataset; state.schedule[k][f]=f==='on'?inp.checked:inp.value; save(); buildDias(); });
 }
+const tgNext=document.getElementById('tgNext');
+tgNext.checked=!!state.showNextWorkday;
+tgNext.onchange=()=>{ state.showNextWorkday=tgNext.checked; save(); };
 
 /* ===== Colores y presets ===== */
 function activePaletteName(){
@@ -572,7 +625,7 @@ document.getElementById('salirFocus').onclick=async()=>{
 const PASOS=[
   {sel:'#zEstado',txt:'Aquí, grande, cuánto falta para entrar o salir del trabajo. Debajo, tus días laborables del mes.'},
   {sel:'#zDial',txt:'El reloj analógico. El “quesito” de color marca la misma cuenta cuando es dentro del mismo día.'},
-  {sel:'#zTimers',txt:'Cuentas puntuales de una sola vez: pon una etiqueta y una fecha (por ejemplo, ver a tu novio).'},
+  {sel:'#zTimers',txt:'Cuentas puntuales: etiqueta, fecha y, si quieres, repetición (cada semana, etc.). Puedes duplicarlas para otra fecha.'},
   {sel:'#zHorario',txt:'Tu horario laboral, día por día. Actívalo y pon entrada y salida. Se guarda solo.'},
   {sel:'#zColores',txt:'Colores personalizables. Elige un color guardado o crea el tuyo y guárdalo.'},
   {sel:'#zBarra',txt:'Pantalla completa (mantiene la pantalla encendida) y copia de seguridad en un archivo.'}
