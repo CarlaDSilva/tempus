@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Tempus</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -28,7 +28,7 @@
   html,body{margin:0;height:100%}
   body{
     background:var(--bg);color:var(--ink);font-family:var(--serif);
-    -webkit-font-smoothing:antialiased;
+    -webkit-font-smoothing:antialiased;touch-action:manipulation;
     padding:max(16px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
     max-width:560px;margin-inline:auto;display:flex;flex-direction:column;gap:22px;
   }
@@ -85,7 +85,7 @@
 
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   input,button,select{font-family:inherit;font-size:16px;color:var(--ink)}
-  input[type=text],input[type=datetime-local],input[type=time]{
+  input[type=text],input[type=datetime-local],input[type=time],input[type=number]{
     background:var(--surface);border:1px solid var(--line);border-radius:10px;
     padding:11px 12px;color:var(--ink);min-width:0}
   input[type=text]{flex:1}
@@ -128,16 +128,18 @@
     border:1px solid var(--line);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:14px;color:var(--ink)}
   .preset .dot2{width:14px;height:14px;border-radius:50%}
   .preset.active{border-color:var(--accent)}
+  .preset .pname{cursor:pointer}
+  .preset .pdel{cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding-left:2px}
 
   .counters{background:var(--surface);border:1px solid var(--line);border-radius:16px;
-    padding:14px 22px;width:min(440px,90vw);margin-inline:auto;flex-direction:column;gap:8px}
-  .crow{display:flex;align-items:center;justify-content:space-between;gap:14px}
-  .crow .clbl{font-family:var(--mono);font-size:17px;color:var(--muted);letter-spacing:1.5px}
-  .cctrl{display:flex;align-items:center;gap:12px}
-  .crow .cnum{font-family:var(--mono);font-weight:700;font-size:40px;color:var(--ink);
-    min-width:72px;text-align:center;font-variant-numeric:tabular-nums}
-  .cbtn{width:32px;height:32px;border:none;background:transparent;color:var(--muted);
-    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.45}
+    padding:14px 20px;width:fit-content;max-width:92vw;margin-inline:auto;
+    flex-direction:row;gap:30px;justify-content:center;align-items:flex-start}
+  .ccell{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .ccell .clbl{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink);letter-spacing:1px}
+  .ccell .cnum{font-family:var(--mono);font-weight:700;font-size:46px;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ccell .cctrl{display:flex;gap:16px;margin-top:2px}
+  .cbtn{width:28px;height:28px;border:none;background:transparent;color:var(--muted);
+    font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.4;touch-action:manipulation}
   .cbtn:active{opacity:1;color:var(--accent)}
   #zCounters{display:none}
   @media (min-width:760px){ body.focus #zCounters{display:flex} }
@@ -167,7 +169,7 @@
 
   body.focus{justify-content:center;gap:34px}
   body.focus .top{justify-content:center}
-  body.focus details.panel,body.focus .barra-inf,body.focus .footer{display:none}
+  body.focus details.panel,body.focus .barra-inf,body.focus .footer,body.focus #zFrase{display:none}
   body.focus #zTimers h2,body.focus #zTimers>.row{display:none}
   body.focus #zTimers .card.done{display:none}
   body.focus #zTimers{text-align:center;max-width:520px;margin-inline:auto}
@@ -266,9 +268,9 @@
   </div>
 
   <div class="counters" id="zCounters">
-    <div class="crow"><span class="clbl">EP</span><div class="cctrl"><button class="cbtn" data-k="EP" data-d="-1">−</button><span class="cnum" id="cEP">0</span><button class="cbtn" data-k="EP" data-d="1">+</button></div></div>
-    <div class="crow"><span class="clbl">SOC</span><div class="cctrl"><button class="cbtn" data-k="SOC" data-d="-1">−</button><span class="cnum" id="cSOC">0</span><button class="cbtn" data-k="SOC" data-d="1">+</button></div></div>
-    <div class="crow"><span class="clbl">NOC</span><div class="cctrl"><button class="cbtn" data-k="NOC" data-d="-1">−</button><span class="cnum" id="cNOC">0</span><button class="cbtn" data-k="NOC" data-d="1">+</button></div></div>
+    <div class="ccell"><span class="clbl">EP</span><span class="cnum" id="cEP">0</span><div class="cctrl"><button class="cbtn" data-k="EP" data-d="-1">−</button><button class="cbtn" data-k="EP" data-d="1">+</button></div></div>
+    <div class="ccell"><span class="clbl">SOC</span><span class="cnum" id="cSOC">0</span><div class="cctrl"><button class="cbtn" data-k="SOC" data-d="-1">−</button><button class="cbtn" data-k="SOC" data-d="1">+</button></div></div>
+    <div class="ccell"><span class="clbl">NOC</span><span class="cnum" id="cNOC">0</span><div class="cctrl"><button class="cbtn" data-k="NOC" data-d="-1">−</button><button class="cbtn" data-k="NOC" data-d="1">+</button></div></div>
   </div>
 
   <div class="frase-zona" id="zFrase">
@@ -316,6 +318,7 @@
       </div>
       <div class="row">
         <input type="text" id="presetName" placeholder="Nombre de la combinación" maxlength="24">
+        <button class="ghost" id="genColor" aria-label="Generar combinación"><svg viewBox="0 0 24 24"><path d="M5 19L16 8M14 6l1.4-3 1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4z"/></svg></button>
         <button class="ghost" id="savePreset">Guardar</button>
         <button class="link" id="resetColor">Restablecer</button>
       </div>
@@ -333,6 +336,23 @@
       </div>
       <div class="lista" id="listaFrases"></div>
       <div class="vacio">Tus frases se mezclan con las del botón. Tu voz es la que mejor da en la tecla.</div>
+    </div>
+  </details>
+
+  <details class="panel" id="zDescansos">
+    <summary>Descansos</summary>
+    <div class="body">
+      <div class="row">
+        <select id="brkDay" aria-label="Día"></select>
+        <input type="time" id="brkTime">
+        <input type="number" id="brkDur" min="1" max="240" placeholder="min" style="width:78px">
+        <button class="primary" id="addBrk">Añadir</button>
+      </div>
+      <div class="lista" id="listaBrk"></div>
+      <label class="toggle-row"><span>Aviso de color al acercarse el descanso</span>
+        <span class="sw"><input type="checkbox" id="tgBrkColor"><span class="knob"></span></span></label>
+      <label class="field">Empezar a avisar (minutos antes)
+        <input type="number" id="brkLead" min="1" max="180" style="width:110px"></label>
     </div>
   </details>
 
@@ -366,7 +386,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='1.6';
+const VER_NUM='1.7';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -390,12 +410,14 @@ const DEFAULT={
     jue:{on:true,in:'09:00',out:'17:00'}, vie:{on:true,in:'09:00',out:'17:00'},
     sab:{on:false,in:'09:00',out:'17:00'} },
   timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false, myPhrases:[],
-  counters:{EP:0,SOC:0,NOC:0}, hourlyColor:false
+  counters:{EP:0,SOC:0,NOC:0}, hourlyColor:false,
+  breaks:[], breakColor:false, breakLead:30
 };
 let state=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),store.get()||{});
 DIAS.forEach(([k])=>{ state.schedule[k]=Object.assign({on:false,in:'09:00',out:'17:00'},state.schedule[k]||{}); });
 if(!Array.isArray(state.palettes)||!state.palettes.length) state.palettes=JSON.parse(JSON.stringify(DEFAULT.palettes));
 state.counters=Object.assign({EP:0,SOC:0,NOC:0},state.counters||{});
+if(!Array.isArray(state.breaks)) state.breaks=[];
 function save(){ store.set(state); }
 
 /* ===== Tiempo ===== */
@@ -467,6 +489,7 @@ function buildTicks(){
 }
 function drawWedge(now,prim){
   const w=document.getElementById('wedge');
+  w.style.fill=''; w.style.opacity='';
   const intradia=(prim.fase==='antes'||prim.fase==='dentro')&&(prim.target-now)<=12*3600*1000;
   if(!intradia){ w.setAttribute('d',''); return; }
   const aN=ang(now),aT=ang(prim.target); let sweep=(aT-aN+360)%360;
@@ -522,8 +545,8 @@ function render(){
     if(nw){ sn.style.display='block'; sn.innerHTML=`Próximo día de trabajo: ${DIASL[nw.getDay()]} · en <b>${fmt(nw-now).main}</b>`; }
     else sn.style.display='none';
   } else sn.style.display='none';
-  if(state.hourlyColor && now.getHours()!==lastHourColor){ lastHourColor=now.getHours(); document.documentElement.style.setProperty('--accent',hourAccent()); }
-  setHands(now); drawWedge(now,prim); renderTimers(now);
+  if(state.hourlyColor && now.getHours()!==lastHourColor){ lastHourColor=now.getHours(); hourAcc=null; document.documentElement.style.setProperty('--accent',pickHourAccent()); }
+  setHands(now); applyBreakColors(now,prim); renderTimers(now);
   requestAnimationFrame(loop);
 }
 let last=-1;
@@ -601,9 +624,15 @@ function activePaletteName(){
     && p.bg.toLowerCase()===state.colors.bg.toLowerCase());
   return hit?hit.name:'Personalizada';
 }
-const HOURLY=['#8aa0b8','#d8a24a','#a88fb0','#8fae9e','#b08a6a','#7f9bb3','#9caf88','#c58f8a','#7fa8a3','#b0a06a','#9a90c4','#c0a15f'];
-let lastHourColor=-1;
-function hourAccent(){ return HOURLY[new Date().getHours()%HOURLY.length]; }
+let lastHourColor=-1, hourAcc=null;
+function pickHourAccent(){
+  const accs=[...new Set((state.palettes||[]).map(p=>p.accent))];
+  if(!accs.length) return state.colors.accent;
+  let c=accs[Math.floor(Math.random()*accs.length)], g=0;
+  while(accs.length>1 && c===hourAcc && g<12){ c=accs[Math.floor(Math.random()*accs.length)]; g++; }
+  hourAcc=c; return c;
+}
+function hourAccent(){ return hourAcc||pickHourAccent(); }
 function applyColors(){
   const acc = state.hourlyColor ? hourAccent() : state.colors.accent;
   document.documentElement.style.setProperty('--accent',acc);
@@ -617,11 +646,13 @@ function applyColors(){
 }
 function buildPresets(){
   const cont=document.getElementById('presets'); cont.innerHTML='';
-  state.palettes.forEach((p,i)=>{
-    const active=p.name===state.paletteName&&activePaletteName()!=='Personalizada';
-    const el=document.createElement('button'); el.className='preset'+(active?' active':'');
-    el.innerHTML=`<span class="dot2" style="background:${p.accent}"></span>${esc(p.name)}`;
-    el.onclick=()=>{ state.colors={accent:p.accent,bg:p.bg}; save(); applyColors(); };
+  state.palettes.forEach((p)=>{
+    const active=p.name===state.paletteName&&!state.hourlyColor&&activePaletteName()!=='Personalizada';
+    const el=document.createElement('span'); el.className='preset'+(active?' active':'');
+    el.innerHTML=`<span class="dot2" style="background:${p.accent}"></span><span class="pname">${esc(p.name)}</span><span class="pdel" aria-label="Eliminar">×</span>`;
+    const apply=()=>{ state.colors={accent:p.accent,bg:p.bg}; save(); applyColors(); };
+    el.querySelector('.dot2').onclick=apply; el.querySelector('.pname').onclick=apply;
+    el.querySelector('.pdel').onclick=(e)=>{ e.stopPropagation(); state.palettes=state.palettes.filter(x=>x.name!==p.name); save(); applyColors(); };
     cont.appendChild(el);
   });
 }
@@ -638,6 +669,88 @@ document.getElementById('savePreset').onclick=()=>{
   state.palettes=state.palettes.filter(p=>p.name.toLowerCase()!==nombre.toLowerCase());
   state.palettes.push({name:nombre,accent:state.colors.accent,bg:state.colors.bg});
   inp.value=''; save(); applyColors();
+};
+function hslToHex(h,s,l){ s/=100;l/=100; const a=s*Math.min(l,1-l);
+  const f=n=>{ const k=(n+h/30)%12; return l-a*Math.max(-1,Math.min(k-3,Math.min(9-k,1))); };
+  const to=x=>Math.round(x*255).toString(16).padStart(2,'0');
+  return '#'+to(f(0))+to(f(8))+to(f(4)); }
+function toneName(h){
+  const t=[[20,'Granate'],[45,'Ámbar'],[70,'Ocre'],[100,'Musgo'],[160,'Salvia'],[200,'Verdemar'],
+    [250,'Niebla'],[290,'Lavanda'],[340,'Ciruela'],[360,'Granate']];
+  for(const [lim,nm] of t){ if(h<lim) return nm; } return 'Tono';
+}
+function genCombo(){
+  const h=Math.floor(Math.random()*360), s=28+Math.random()*14, l=58+Math.random()*10;
+  return {name:toneName(h), accent:hslToHex(h,s,l), bg:hslToHex(h,12,10)};
+}
+document.getElementById('genColor').onclick=()=>{
+  const c=genCombo(); let nm=c.name, n=2;
+  while(state.palettes.some(p=>p.name.toLowerCase()===nm.toLowerCase())){ nm=c.name+' '+n; n++; }
+  state.palettes.push({name:nm,accent:c.accent,bg:c.bg});
+  state.colors={accent:c.accent,bg:c.bg};
+  save(); applyColors();
+};
+
+/* ===== Descansos + aviso de color ===== */
+const GREEN='#6fbf73', RED='#cf5a52';
+function hexLerp(a,b,t){ t=Math.max(0,Math.min(1,t));
+  const pa=[1,3,5].map(i=>parseInt(a.substr(i,2),16)), pb=[1,3,5].map(i=>parseInt(b.substr(i,2),16));
+  return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+function breakState(now){
+  const lead=(state.breakLead||30)*60000;
+  for(const b of (state.breaks||[])){
+    if(b.day!==now.getDay()) continue;
+    const start=atToday(now,b.time), end=new Date(start.getTime()+(b.dur||0)*60000);
+    if(now>=start.getTime()-lead && now<start) return {phase:'lead', t:(now-(start.getTime()-lead))/lead, end};
+    if(now>=start && now<end) return {phase:'active', t:(now-start)/(end-start), end};
+  }
+  return {phase:'none'};
+}
+function drawBreakWedge(now,end,color){
+  const w=document.getElementById('wedge');
+  const aN=ang(now), aT=ang(end); let sweep=(aT-aN+360)%360;
+  if(sweep===0){ w.setAttribute('d',''); return; }
+  const r=80,[x1,y1]=pt(100,100,r,aN),[x2,y2]=pt(100,100,r,aT),large=sweep>180?1:0;
+  w.setAttribute('d',`M100 100 L${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`);
+  w.style.fill=color; w.style.opacity=.5;
+}
+function applyBreakColors(now,prim){
+  const bs = state.breakColor ? breakState(now) : {phase:'none'};
+  const nums=document.querySelectorAll('.num');
+  if(bs.phase==='lead'){
+    const c=hexLerp('#ece9e1',GREEN,bs.t), op=0.16+0.74*bs.t;
+    nums.forEach(n=>{ n.style.fill=c; n.style.opacity=op; });
+    drawWedge(now,prim);
+  }else if(bs.phase==='active'){
+    const c=hexLerp(GREEN,RED,bs.t);
+    nums.forEach(n=>{ n.style.fill=c; n.style.opacity=.9; });
+    drawBreakWedge(now,bs.end,c);
+  }else{
+    nums.forEach(n=>{ n.style.fill=''; n.style.opacity=''; });
+    drawWedge(now,prim);
+  }
+}
+function buildBrk(){
+  const sel=document.getElementById('brkDay');
+  if(!sel.options.length){ DIAS.forEach(([k,nom],idx)=>{ const o=document.createElement('option'); o.value=idx; o.textContent=nom; sel.appendChild(o); }); }
+  const cont=document.getElementById('listaBrk'); cont.innerHTML='';
+  (state.breaks||[]).forEach((b,i)=>{
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="txt"><div class="lbl">${DIAS[b.day][1]} · ${b.time}</div><div class="meta">${b.dur} min</div></div>
+      <button class="icon-btn" data-i="${i}" aria-label="Borrar">${TRASH}</button>`;
+    cont.appendChild(card);
+  });
+  cont.querySelectorAll('.icon-btn').forEach(bt=>bt.onclick=()=>{ state.breaks.splice(+bt.dataset.i,1); save(); buildBrk(); });
+  const tg=document.getElementById('tgBrkColor'); tg.checked=!!state.breakColor;
+  tg.onchange=()=>{ state.breakColor=tg.checked; save(); };
+  const ld=document.getElementById('brkLead'); ld.value=state.breakLead||30;
+  ld.onchange=()=>{ state.breakLead=Math.max(1,+ld.value||30); save(); };
+}
+document.getElementById('addBrk').onclick=()=>{
+  const day=+document.getElementById('brkDay').value, time=document.getElementById('brkTime').value, dur=+document.getElementById('brkDur').value;
+  if(time===''||!dur) return;
+  state.breaks.push({day,time,dur}); save(); buildBrk();
+  document.getElementById('brkTime').value=''; document.getElementById('brkDur').value='';
 };
 
 /* ===== Exportar / importar ===== */
@@ -805,9 +918,9 @@ function buildCounters(){
 }
 const tgHora=document.getElementById('tgHora');
 tgHora.checked=!!state.hourlyColor;
-tgHora.onchange=()=>{ state.hourlyColor=tgHora.checked; save(); lastHourColor=-1; applyColors(); };
+tgHora.onchange=()=>{ state.hourlyColor=tgHora.checked; save(); lastHourColor=-1; hourAcc=null; applyColors(); };
 
-applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); render();
+applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); buildBrk(); render();
 window.addEventListener('load',()=>{
   setTimeout(()=>document.getElementById('loader').classList.add('hide'),800);
   if(!state.tutorialSeen) setTimeout(startTut,1200);
