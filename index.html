@@ -129,7 +129,37 @@
   .preset .dot2{width:14px;height:14px;border-radius:50%}
   .preset.active{border-color:var(--accent)}
 
+  .counters{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:14px 22px;width:min(440px,90vw);margin-inline:auto;flex-direction:column;gap:8px}
+  .crow{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .crow .clbl{font-family:var(--mono);font-size:17px;color:var(--muted);letter-spacing:1.5px}
+  .cctrl{display:flex;align-items:center;gap:12px}
+  .crow .cnum{font-family:var(--mono);font-weight:700;font-size:40px;color:var(--ink);
+    min-width:72px;text-align:center;font-variant-numeric:tabular-nums}
+  .cbtn{width:32px;height:32px;border:none;background:transparent;color:var(--muted);
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:.45}
+  .cbtn:active{opacity:1;color:var(--accent)}
+  #zCounters{display:none}
+  @media (min-width:760px){ body.focus #zCounters{display:flex} }
   .toggle-row{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:15px;color:var(--ink)}
+  .frase-zona{display:flex;flex-direction:column;align-items:center;gap:18px}
+  .btn3d{border:none;cursor:pointer;width:86px;height:86px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent);
+    background:radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 72%, white) 0%, var(--accent) 52%, color-mix(in srgb, var(--accent) 80%, black) 100%);
+    box-shadow:0 7px 0 rgba(0,0,0,.4),0 10px 18px rgba(0,0,0,.4);
+    box-shadow:0 8px 0 color-mix(in srgb, var(--accent) 55%, black),0 12px 20px rgba(0,0,0,.45),
+      inset 0 3px 5px rgba(255,255,255,.4),inset 0 -4px 7px rgba(0,0,0,.28);
+    transition:transform .09s ease, box-shadow .09s ease}
+  .btn3d:hover{transform:translateY(-1px)}
+  .btn3d:active{transform:translateY(7px);
+    box-shadow:0 1px 0 rgba(0,0,0,.4),0 3px 8px rgba(0,0,0,.4);
+    box-shadow:0 1px 0 color-mix(in srgb, var(--accent) 55%, black),0 3px 8px rgba(0,0,0,.4),
+      inset 0 3px 5px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.28)}
+  .btn3d:active{transform:translateY(5px);box-shadow:0 1px 0 rgba(0,0,0,.38),0 3px 8px rgba(0,0,0,.3)}
+  .frase-out{display:none;font-family:var(--serif);font-size:clamp(20px,5vw,27px);text-align:center;
+    line-height:1.42;max-width:520px;color:var(--ink);border-top:1px solid var(--line);padding-top:18px}
+  .frase-out.on{display:block}
   .barra-inf{display:flex;gap:10px;flex-wrap:wrap}
   .footer{color:var(--muted);font-size:13px;font-family:var(--mono);text-align:center;
     display:flex;justify-content:center;align-items:center;gap:14px}
@@ -235,6 +265,17 @@
   </div>
   </div>
 
+  <div class="counters" id="zCounters">
+    <div class="crow"><span class="clbl">EP</span><div class="cctrl"><button class="cbtn" data-k="EP" data-d="-1">−</button><span class="cnum" id="cEP">0</span><button class="cbtn" data-k="EP" data-d="1">+</button></div></div>
+    <div class="crow"><span class="clbl">SOC</span><div class="cctrl"><button class="cbtn" data-k="SOC" data-d="-1">−</button><span class="cnum" id="cSOC">0</span><button class="cbtn" data-k="SOC" data-d="1">+</button></div></div>
+    <div class="crow"><span class="clbl">NOC</span><div class="cctrl"><button class="cbtn" data-k="NOC" data-d="-1">−</button><span class="cnum" id="cNOC">0</span><button class="cbtn" data-k="NOC" data-d="1">+</button></div></div>
+  </div>
+
+  <div class="frase-zona" id="zFrase">
+    <button class="btn3d" id="btnFrase" aria-label="Dame una frase"><svg viewBox="0 0 24 24" style="width:38px;height:38px;fill:#14161d;stroke:none"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.8 5.9 20.4l1.5-6.8L2.2 9l6.9-.7z"/></svg></button>
+    <div class="frase-out" id="fraseOut"></div>
+  </div>
+
   <section id="zTimers">
     <h2>Cuentas puntuales</h2>
     <div class="lista" id="lista"></div>
@@ -278,6 +319,20 @@
         <button class="ghost" id="savePreset">Guardar</button>
         <button class="link" id="resetColor">Restablecer</button>
       </div>
+      <label class="toggle-row"><span>Cambiar el color cada hora</span>
+        <span class="sw"><input type="checkbox" id="tgHora"><span class="knob"></span></span></label>
+    </div>
+  </details>
+
+  <details class="panel" id="zFrases">
+    <summary>Frases</summary>
+    <div class="body">
+      <div class="row">
+        <input type="text" id="nvFrase" placeholder="Añade tu propia frase" maxlength="120">
+        <button class="primary" id="addFrase">Añadir</button>
+      </div>
+      <div class="lista" id="listaFrases"></div>
+      <div class="vacio">Tus frases se mezclan con las del botón. Tu voz es la que mejor da en la tecla.</div>
     </div>
   </details>
 
@@ -311,7 +366,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='1.2';
+const VER_NUM='1.6';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -334,11 +389,13 @@ const DEFAULT={
     mar:{on:true,in:'09:00',out:'17:00'}, mie:{on:true,in:'09:00',out:'17:00'},
     jue:{on:true,in:'09:00',out:'17:00'}, vie:{on:true,in:'09:00',out:'17:00'},
     sab:{on:false,in:'09:00',out:'17:00'} },
-  timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false
+  timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false, myPhrases:[],
+  counters:{EP:0,SOC:0,NOC:0}, hourlyColor:false
 };
 let state=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),store.get()||{});
 DIAS.forEach(([k])=>{ state.schedule[k]=Object.assign({on:false,in:'09:00',out:'17:00'},state.schedule[k]||{}); });
 if(!Array.isArray(state.palettes)||!state.palettes.length) state.palettes=JSON.parse(JSON.stringify(DEFAULT.palettes));
+state.counters=Object.assign({EP:0,SOC:0,NOC:0},state.counters||{});
 function save(){ store.set(state); }
 
 /* ===== Tiempo ===== */
@@ -465,6 +522,7 @@ function render(){
     if(nw){ sn.style.display='block'; sn.innerHTML=`Próximo día de trabajo: ${DIASL[nw.getDay()]} · en <b>${fmt(nw-now).main}</b>`; }
     else sn.style.display='none';
   } else sn.style.display='none';
+  if(state.hourlyColor && now.getHours()!==lastHourColor){ lastHourColor=now.getHours(); document.documentElement.style.setProperty('--accent',hourAccent()); }
   setHands(now); drawWedge(now,prim); renderTimers(now);
   requestAnimationFrame(loop);
 }
@@ -543,13 +601,17 @@ function activePaletteName(){
     && p.bg.toLowerCase()===state.colors.bg.toLowerCase());
   return hit?hit.name:'Personalizada';
 }
+const HOURLY=['#8aa0b8','#d8a24a','#a88fb0','#8fae9e','#b08a6a','#7f9bb3','#9caf88','#c58f8a','#7fa8a3','#b0a06a','#9a90c4','#c0a15f'];
+let lastHourColor=-1;
+function hourAccent(){ return HOURLY[new Date().getHours()%HOURLY.length]; }
 function applyColors(){
-  document.documentElement.style.setProperty('--accent',state.colors.accent);
+  const acc = state.hourlyColor ? hourAccent() : state.colors.accent;
+  document.documentElement.style.setProperty('--accent',acc);
   document.documentElement.style.setProperty('--bg',state.colors.bg);
   const tc=document.querySelector('meta[name=theme-color]'); if(tc) tc.setAttribute('content',state.colors.bg);
   document.getElementById('cAccent').value=state.colors.accent;
   document.getElementById('cBg').value=state.colors.bg;
-  state.paletteName=activePaletteName();
+  state.paletteName = state.hourlyColor ? 'Auto' : activePaletteName();
   document.getElementById('ver').textContent=`${VER_NUM} · ${state.paletteName}`;
   buildPresets();
 }
@@ -625,6 +687,7 @@ document.getElementById('salirFocus').onclick=async()=>{
 const PASOS=[
   {sel:'#zEstado',txt:'Aquí, grande, cuánto falta para entrar o salir del trabajo. Debajo, tus días laborables del mes.'},
   {sel:'#zDial',txt:'El reloj analógico. El “quesito” de color marca la misma cuenta cuando es dentro del mismo día.'},
+  {sel:'#zFrase',txt:'Un empujón cuando lo necesites: pulsa y sale una frase; pulsa otra vez y desaparece. Puedes añadir las tuyas en Frases.'},
   {sel:'#zTimers',txt:'Cuentas puntuales: etiqueta, fecha y, si quieres, repetición (cada semana, etc.). Puedes duplicarlas para otra fecha.'},
   {sel:'#zHorario',txt:'Tu horario laboral, día por día. Actívalo y pon entrada y salida. Se guarda solo.'},
   {sel:'#zColores',txt:'Colores personalizables. Elige un color guardado o crea el tuyo y guárdalo.'},
@@ -653,7 +716,98 @@ document.getElementById('tutNunca').onclick=()=>{ state.tutorialSeen=true; save(
 document.getElementById('btnTutorial').onclick=startTut;
 
 /* ===== Arranque ===== */
-applyColors(); buildTicks(); buildDias(); buildSug(); render();
+/* ===== Frases (botón 3D) ===== */
+const BANK=[
+ "A ganar lo que ya debes.",
+ "La máquina de chamba casi termina su jornada.",
+ "A trabajar, que las compras compulsivas no se pagan solas.",
+ "Barbie no tenía experiencia: se puso el outfit y arrancó.",
+ "Otra jornada más de fingir que sé lo que hago.",
+ "Otra jornada improvisando con cara de tenerlo todo bajo control.",
+ "Cada hora que pasa te acerca a lo que quieres.",
+ "Un turno más cerca de tu próximo objetivo.",
+ "Lo difícil de hoy es la base de lo fácil de mañana.",
+ "Lo que hoy te cuesta, mañana lo harás sin pensar.",
+ "No compites con nadie más; solo con la de ayer.",
+ "Que el cansancio no te haga olvidar lo lejos que has llegado.",
+ "Estás sosteniendo más de lo que parece; bien hecho.",
+ "Un mal día no borra tu constancia.",
+ "Mereces el descanso que viene después de esto.",
+ "Vas bien. En serio, vas bien.",
+ "Has aguantado cosas peores; esto también lo tienes.",
+ "Un día más cerca de la jubilación o del colapso, lo que llegue antes.",
+ "Almost there — future you says thanks.",
+ "One shift closer to your weekend self.",
+ "You didn't come this far to only come this far.",
+ "Future you is already grateful.",
+ "Future you is clocking out happy — keep going.",
+ "You're building something; today is one more brick.",
+ "The only way to do great work is to love what you do. — Steve Jobs",
+ "Trabajo desde casa, o sea, sufro en pijama.",
+ "A mí no me pagan por lo que hago, sino por lo que aguanto.",
+ "Fingir que trabajo cansa más que trabajar, pero aquí seguimos.",
+ "Hoy mi único objetivo es sobrevivir con dignidad.",
+ "Hoy rindo al nivel de 'que no se note que estoy aquí de milagro'.",
+ "Un día más de práctica es un día menos de dudas.",
+ "El futuro que quieres se construye en jornadas como esta.",
+ "Sales de hoy sabiendo algo que esta mañana no sabías.",
+ "Cada hora aquí compra un trozo de la vida que estás armando.",
+ "La versión de ti de dentro de un año te está mirando; hazla sonreír.",
+ "Sumas experiencia aunque no lo notes en el momento.",
+ "Un turno más cerca de poder elegir en vez de aguantar.",
+ "Avanzas aunque el paso de hoy parezca pequeño.",
+ "Cada esfuerzo de hoy es un voto por quien quieres ser.",
+ "Lo estás haciendo mejor de lo que crees; estás demasiado cerca para verlo.",
+ "Ya has salido de días peores; de este también sales.",
+ "Hoy, con hacerlo y aguantar, ya es suficiente.",
+ "Mira cuánto has aguantado ya; lo que queda es menos.",
+ "El descanso que viene te lo has ganado entero.",
+ "Vas a mirar atrás y ver que esto también lo superaste.",
+ "One shift closer to the life you're actually building.",
+ "This shift is a deposit in a very patient account.",
+ "Not the dream job, but the job that funds the dream."
+];
+function pool(){ return BANK.concat(state.myPhrases||[]); }
+let fraseVisible=false, lastFrase=-1;
+document.getElementById('btnFrase').onclick=()=>{
+  const out=document.getElementById('fraseOut');
+  if(fraseVisible){ out.classList.remove('on'); fraseVisible=false; return; }
+  const p=pool(); if(!p.length){ out.textContent='Añade alguna frase en Frases.'; out.classList.add('on'); fraseVisible=true; return; }
+  let idx=Math.floor(Math.random()*p.length);
+  if(p.length>1){ let g=0; while(idx===lastFrase&&g<20){ idx=Math.floor(Math.random()*p.length); g++; } }
+  lastFrase=idx; out.textContent=p[idx]; out.classList.add('on'); fraseVisible=true;
+};
+function buildFrases(){
+  const cont=document.getElementById('listaFrases'); cont.innerHTML='';
+  (state.myPhrases||[]).forEach((fr,idx)=>{
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="txt"><div class="lbl">${esc(fr)}</div></div>
+      <button class="icon-btn" data-i="${idx}" aria-label="Borrar">${TRASH}</button>`;
+    cont.appendChild(card);
+  });
+  cont.querySelectorAll('.icon-btn').forEach(b=>b.onclick=()=>{
+    state.myPhrases.splice(+b.dataset.i,1); save(); buildFrases(); });
+}
+document.getElementById('addFrase').onclick=()=>{
+  const inp=document.getElementById('nvFrase'), v=inp.value.trim();
+  if(!v) return;
+  if(!state.myPhrases) state.myPhrases=[];
+  state.myPhrases.push(v); save(); inp.value=''; buildFrases();
+};
+
+function buildCounters(){
+  ['EP','SOC','NOC'].forEach(k=>{ const el=document.getElementById('c'+k); if(el) el.textContent=state.counters[k]; });
+  document.querySelectorAll('.cbtn').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k, d=+b.dataset.d;
+    state.counters[k]=Math.max(0,(state.counters[k]||0)+d);
+    document.getElementById('c'+k).textContent=state.counters[k]; save();
+  });
+}
+const tgHora=document.getElementById('tgHora');
+tgHora.checked=!!state.hourlyColor;
+tgHora.onchange=()=>{ state.hourlyColor=tgHora.checked; save(); lastHourColor=-1; applyColors(); };
+
+applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); render();
 window.addEventListener('load',()=>{
   setTimeout(()=>document.getElementById('loader').classList.add('hide'),800);
   if(!state.tutorialSeen) setTimeout(startTut,1200);
