@@ -149,22 +149,19 @@
   }
   .gtot{font-size:18px;color:var(--ink)}
   .gtot b{font-family:var(--mono);font-size:24px;color:var(--accent)}
+  .colrow{display:flex;align-items:center;gap:12px}
+  .colrow .colk{font-family:var(--mono);font-weight:700;width:44px}
+  .colrow .colv{font-family:var(--mono);font-size:24px;flex:1}
   .toggle-row{display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:15px;color:var(--ink)}
   .frase-zona{display:flex;flex-direction:column;align-items:center;gap:18px}
-  .btn-socket{width:122px;height:122px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-inline:auto;
-    background:var(--accent);
-    background:radial-gradient(circle at 50% 40%, color-mix(in srgb,var(--accent) 60%, white) 0%, color-mix(in srgb,var(--accent) 44%, white) 55%, color-mix(in srgb,var(--accent) 58%, black) 100%);
-    box-shadow:0 14px 22px rgba(0,0,0,.5),0 5px 8px rgba(0,0,0,.4),inset 0 4px 6px rgba(255,255,255,.55),inset 0 -11px 17px rgba(0,0,0,.3)}
-  .btn3d{border:none;cursor:pointer;width:84px;height:84px;border-radius:50%;padding:0;position:relative;
-    background:var(--accent);
-    background:radial-gradient(circle at 50% 27%, color-mix(in srgb,var(--accent) 40%, white) 0%, var(--accent) 45%, color-mix(in srgb,var(--accent) 74%, black) 100%);
-    box-shadow:0 11px 17px rgba(0,0,0,.5),0 5px 6px rgba(0,0,0,.45),inset 0 6px 8px rgba(255,255,255,.68),inset 0 -9px 13px rgba(0,0,0,.36);
-    transition:transform .14s cubic-bezier(.4,.15,.2,1), box-shadow .14s ease}
-  .btn3d::before{content:"";position:absolute;top:11%;left:24%;width:52%;height:32%;border-radius:50%;
-    background:radial-gradient(ellipse at center,rgba(255,255,255,.72),rgba(255,255,255,0) 72%);pointer-events:none;transition:opacity .14s}
-  .btn3d:active{transform:translateY(7px) scale(.88);
-    box-shadow:0 2px 5px rgba(0,0,0,.5),inset 0 9px 15px rgba(0,0,0,.52),inset 0 -2px 3px rgba(255,255,255,.16)}
-  .btn3d:active::before{opacity:.15}
+  .btn-socket{display:flex;align-items:center;justify-content:center;margin-inline:auto;background:none;box-shadow:none}
+  #zFrase.auto .btn-socket{display:none}
+  .btn3d{border:1px solid var(--line);cursor:pointer;width:66px;height:34px;border-radius:11px;padding:0;position:relative;
+    background:var(--surface);
+    box-shadow:0 3px 0 var(--line),0 4px 6px rgba(0,0,0,.28);
+    transition:transform .2s cubic-bezier(.4,.15,.2,1), box-shadow .2s ease}
+  .btn3d:active{transform:translateY(3px);
+    box-shadow:0 0 0 var(--line),0 1px 3px rgba(0,0,0,.28)}
   .frase-out{height:92px;display:flex;align-items:center;justify-content:center;text-align:center;
     font-family:var(--serif);font-size:clamp(19px,4.4vw,25px);line-height:1.34;max-width:520px;
     margin-inline:auto;color:var(--ink);opacity:0;transition:opacity .16s}
@@ -187,9 +184,8 @@
   body.focus svg.dial{width:min(42vh,380px)}
   body.focus .estado .grande{font-size:clamp(56px,8vw,104px)}
   body.focus #zFrase{gap:10px}
-  body.focus .btn-socket{width:86px;height:86px}
-  body.focus .btn3d{width:58px;height:58px}
-  body.focus .btn3d:active{transform:translateY(5px) scale(.88)}
+  body.focus .btn3d{width:62px;height:32px}
+  body.focus .btn3d:active{transform:translateY(3px)}
   body.focus .frase-out{height:60px;font-size:clamp(15px,3vw,19px);max-width:440px}
   #salirFocus{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:30}
   body.focus #salirFocus{display:inline-flex}
@@ -349,7 +345,9 @@
         <button class="primary" id="addFrase">Añadir</button>
       </div>
       <div class="lista" id="listaFrases"></div>
-      <div class="vacio">Tus frases se mezclan con las del botón. Tu voz es la que mejor da en la tecla.</div>
+      <label class="toggle-row"><span>Frase automática cada hora (sin botón)</span>
+        <span class="sw"><input type="checkbox" id="tgPhraseAuto"><span class="knob"></span></span></label>
+      <div class="vacio">Con el botón, pulsas para ver una frase. En automático, cambia sola cada hora al azar.</div>
     </div>
   </details>
 
@@ -385,6 +383,15 @@
     </div>
   </details>
 
+  <details class="panel" id="zColas">
+    <summary>Colas</summary>
+    <div class="body">
+      <div class="colrow"><span class="colk">EP</span><b class="colv" id="qEP">0</b><button class="ghost" data-k="EP" data-add="5">+5</button><button class="link" data-k="EP" data-reset="1">Reiniciar</button></div>
+      <div class="colrow"><span class="colk">SOC</span><b class="colv" id="qSOC">0</b><button class="ghost" data-k="SOC" data-add="5">+5</button><button class="link" data-k="SOC" data-reset="1">Reiniciar</button></div>
+      <div class="colrow"><span class="colk">NOC</span><b class="colv" id="qNOC">0</b><button class="ghost" data-k="NOC" data-add="5">+5</button><button class="link" data-k="NOC" data-reset="1">Reiniciar</button></div>
+    </div>
+  </details>
+
   <div class="barra-inf" id="zBarra">
     <button class="ghost" id="btnFocus">
       <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Pantalla completa</button>
@@ -415,7 +422,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='2.4';
+const VER_NUM='2.5';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -438,7 +445,7 @@ const DEFAULT={
     mar:{on:true,in:'09:00',out:'17:00'}, mie:{on:true,in:'09:00',out:'17:00'},
     jue:{on:true,in:'09:00',out:'17:00'}, vie:{on:true,in:'09:00',out:'17:00'},
     sab:{on:false,in:'09:00',out:'17:00'} },
-  timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false, myPhrases:[],
+  timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false, myPhrases:[], phraseAuto:false,
   counters:{EP:0,SOC:0,NOC:0}, hourlyColor:false,
   breaks:[], breakColor:false, breakLead:30, rate:9, earningsSaved:0
 };
@@ -553,15 +560,21 @@ function render(){
         HEART='<svg viewBox="0 0 24 24" style="width:.9em;height:.9em;vertical-align:-2px;fill:var(--accent);stroke:none;display:inline-block;margin-left:5px"><path d="M12 21s-6.7-4.35-9.1-8.28C1.2 9.9 2.7 6.5 6 6.5c1.9 0 3.1 1.05 4 2.2.9-1.15 2.1-2.2 4-2.2 3.3 0 4.8 3.4 3.1 6.22C18.7 16.65 12 21 12 21z"/></svg>';
 
   if(prim.fase==='antes'){
-    rot.textContent='Entras en'; big.innerHTML=bigHTML(fmt(prim.target-now));
-    sub.innerHTML=`Ganado hoy: <b>${eur}</b>`; sm.innerHTML=wdlTxt;
+    if(state.showNextWorkday){
+      rot.textContent='Descansa'; big.innerHTML=bigHTML(fmt(prim.target-now));
+      sub.innerHTML=`Te mereces este descanso${HEART}`;
+      sm.innerHTML=`Entras a las ${prim.ini.toTimeString().slice(0,5)}`;
+    }else{
+      rot.textContent='Entras en'; big.innerHTML=bigHTML(fmt(prim.target-now));
+      sub.innerHTML=wdlTxt; sm.innerHTML=`Ganado hoy: <b>${eur}</b>`;
+    }
     prog.classList.remove('on');
   }else if(prim.fase==='dentro'){
     rot.textContent='Sales en'; big.innerHTML=bigHTML(fmt(prim.target-now));
     const tot=prim.fin-prim.ini, el=now-prim.ini, pc=Math.min(100,Math.max(0,el/tot*100));
     document.getElementById('progFill').style.width=pc+'%';
     document.getElementById('progPct').textContent=`Turno: ${pc.toFixed(0)} % completado`;
-    sub.innerHTML=`Ganado hoy: <b>${eur}</b>`; sm.innerHTML=wdlTxt;
+    sub.innerHTML=wdlTxt; sm.innerHTML=`Ganado hoy: <b>${eur}</b>`;
     prog.classList.add('on');
   }else if(prim.fase==='siguiente'){
     prog.classList.remove('on');
@@ -571,8 +584,8 @@ function render(){
       sm.innerHTML=`Vuelves el ${DIASL[prim.target.getDay()]} a las ${prim.target.toTimeString().slice(0,5)}`;
     }else{
       rot.textContent='Próximo turno'; big.innerHTML=bigHTML(fmt(prim.target-now));
-      sub.innerHTML=earn>0?`Ganado hoy: <b>${eur}</b>`:'';
-      sm.innerHTML=`${DIASL[prim.target.getDay()]} a las ${prim.target.toTimeString().slice(0,5)} · ${wdlTxt}`;
+      sub.innerHTML=`${DIASL[prim.target.getDay()]} a las ${prim.target.toTimeString().slice(0,5)} · ${wdlTxt}`;
+      sm.innerHTML=earn>0?`Ganado hoy: <b>${eur}</b>`:'';
     }
   }else{
     prog.classList.remove('on');
@@ -585,6 +598,7 @@ function render(){
     }
   }
   if(state.hourlyColor && now.getHours()!==lastHourColor){ lastHourColor=now.getHours(); hourAcc=null; document.documentElement.style.setProperty('--accent',pickHourAccent()); }
+  autoPhraseTick(now);
   setHands(now); applyBreakColors(now,prim); renderTimers(now);
   requestAnimationFrame(loop);
 }
@@ -939,6 +953,25 @@ document.getElementById('btnFrase').onclick=()=>{
   if(p.length>1){ let g=0; while(idx===lastFrase&&g<20){ idx=Math.floor(Math.random()*p.length); g++; } }
   lastFrase=idx; out.textContent=p[idx]; out.classList.add('on'); fraseVisible=true;
 };
+let lastPhraseHour=-1;
+function randPhrase(){ const p=pool(); if(!p.length) return '';
+  let idx=Math.floor(Math.random()*p.length);
+  if(p.length>1){ let g=0; while(idx===lastFrase&&g<20){ idx=Math.floor(Math.random()*p.length); g++; } }
+  lastFrase=idx; return p[idx]; }
+function autoPhraseTick(now){
+  if(!state.phraseAuto) return;
+  if(now.getHours()!==lastPhraseHour){ lastPhraseHour=now.getHours();
+    const out=document.getElementById('fraseOut'), t=randPhrase(); if(t){ out.textContent=t; out.classList.add('on'); } }
+}
+function applyPhraseMode(){
+  document.getElementById('zFrase').classList.toggle('auto', state.phraseAuto);
+  const out=document.getElementById('fraseOut');
+  if(state.phraseAuto){ lastPhraseHour=-1; autoPhraseTick(new Date()); }
+  else { fraseVisible=false; out.classList.remove('on'); }
+}
+const tgPhraseAuto=document.getElementById('tgPhraseAuto');
+tgPhraseAuto.checked=!!state.phraseAuto;
+tgPhraseAuto.onchange=()=>{ state.phraseAuto=tgPhraseAuto.checked; save(); applyPhraseMode(); };
 function buildFrases(){
   const cont=document.getElementById('listaFrases'); cont.innerHTML='';
   (state.myPhrases||[]).forEach((fr,idx)=>{
@@ -957,12 +990,28 @@ document.getElementById('addFrase').onclick=()=>{
   state.myPhrases.push(v); save(); inp.value=''; buildFrases();
 };
 
+function refreshCounters(){
+  ['EP','SOC','NOC'].forEach(k=>{
+    const a=document.getElementById('c'+k); if(a) a.textContent=state.counters[k];
+    const b=document.getElementById('q'+k); if(b) b.textContent=state.counters[k];
+  });
+}
 function buildCounters(){
-  ['EP','SOC','NOC'].forEach(k=>{ const el=document.getElementById('c'+k); if(el) el.textContent=state.counters[k]; });
+  refreshCounters();
   document.querySelectorAll('.cbtn').forEach(b=>b.onclick=()=>{
     const k=b.dataset.k, d=+b.dataset.d;
     state.counters[k]=Math.max(0,(state.counters[k]||0)+d);
-    document.getElementById('c'+k).textContent=state.counters[k]; save();
+    refreshCounters(); save();
+  });
+}
+function buildColas(){
+  refreshCounters();
+  document.querySelectorAll('#zColas [data-add]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k; state.counters[k]=Math.max(0,(state.counters[k]||0)+(+b.dataset.add));
+    refreshCounters(); save();
+  });
+  document.querySelectorAll('#zColas [data-reset]').forEach(b=>b.onclick=()=>{
+    state.counters[b.dataset.k]=0; refreshCounters(); save();
   });
 }
 const tgHora=document.getElementById('tgHora');
@@ -983,7 +1032,7 @@ document.getElementById('gToday').onclick=()=>{
 };
 document.getElementById('gReset').onclick=()=>{ state.earningsSaved=0; save(); buildGanancias(); };
 
-applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); buildBrk(); buildGanancias(); render();
+applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); buildColas(); buildBrk(); buildGanancias(); applyPhraseMode(); render();
 window.addEventListener('load',()=>{
   setTimeout(()=>document.getElementById('loader').classList.add('hide'),800);
   if(!state.tutorialSeen) setTimeout(startTut,1200);
