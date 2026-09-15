@@ -164,7 +164,7 @@
     box-shadow:0 0 0 var(--line),0 1px 3px rgba(0,0,0,.28)}
   .frase-out{height:92px;display:flex;align-items:center;justify-content:center;text-align:center;
     font-family:var(--serif);font-size:clamp(19px,4.4vw,25px);line-height:1.34;max-width:520px;
-    margin-inline:auto;color:var(--ink);opacity:0;transition:opacity .16s}
+    margin-inline:auto;color:var(--ink);opacity:0;transition:opacity .16s;text-wrap:balance}
   .frase-out.on{opacity:1}
   .barra-inf{display:flex;gap:10px;flex-wrap:wrap}
   .footer{color:var(--muted);font-size:13px;font-family:var(--mono);text-align:center;
@@ -422,7 +422,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='2.5';
+const VER_NUM='2.6';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -780,16 +780,20 @@ function drawBreakWedge(now,end,color){
 function applyBreakColors(now,prim){
   const bs = state.breakColor ? breakState(now) : {phase:'none'};
   const nums=document.querySelectorAll('.num');
+  const root=document.documentElement;
   if(bs.phase==='lead'){
     const c=hexLerp('#ece9e1',GREEN,bs.t), op=0.16+0.74*bs.t;
     nums.forEach(n=>{ n.style.fill=c; n.style.opacity=op; });
+    root.style.setProperty('--accent', hexLerp(state.colors.accent, GREEN, bs.t));
     drawWedge(now,prim);
   }else if(bs.phase==='active'){
     const c=hexLerp(GREEN,RED,bs.t);
     nums.forEach(n=>{ n.style.fill=c; n.style.opacity=.9; });
+    root.style.setProperty('--accent', hexLerp(GREEN, RED, bs.t));
     drawBreakWedge(now,bs.end,c);
   }else{
     nums.forEach(n=>{ n.style.fill=''; n.style.opacity=''; });
+    root.style.setProperty('--accent', state.hourlyColor ? hourAccent() : state.colors.accent);
     drawWedge(now,prim);
   }
 }
