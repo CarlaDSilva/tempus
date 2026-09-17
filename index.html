@@ -309,7 +309,7 @@
     <div class="body">
       <div class="dias" id="dias"></div>
       <div class="vacio">Activa cada día y pon la hora de entrada y de salida. Se guarda solo.</div>
-      <label class="toggle-row"><span>Mostrar cuánto falta para el próximo día de trabajo</span>
+      <label class="toggle-row"><span>Modo descanso</span>
         <span class="sw"><input type="checkbox" id="tgNext"><span class="knob"></span></span></label>
       <label class="field">€ por hora
         <input type="number" id="rate" min="0" step="0.5" style="width:110px"></label>
@@ -422,7 +422,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='2.6';
+const VER_NUM='2.7';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -559,15 +559,13 @@ function render(){
         earn=earningsToday(now), eur=fmtEur(earn),
         HEART='<svg viewBox="0 0 24 24" style="width:.9em;height:.9em;vertical-align:-2px;fill:var(--accent);stroke:none;display:inline-block;margin-left:5px"><path d="M12 21s-6.7-4.35-9.1-8.28C1.2 9.9 2.7 6.5 6 6.5c1.9 0 3.1 1.05 4 2.2.9-1.15 2.1-2.2 4-2.2 3.3 0 4.8 3.4 3.1 6.22C18.7 16.65 12 21 12 21z"/></svg>';
 
-  if(prim.fase==='antes'){
-    if(state.showNextWorkday){
-      rot.textContent='Descansa'; big.innerHTML=bigHTML(fmt(prim.target-now));
-      sub.innerHTML=`Te mereces este descanso${HEART}`;
-      sm.innerHTML=`Entras a las ${prim.ini.toTimeString().slice(0,5)}`;
-    }else{
-      rot.textContent='Entras en'; big.innerHTML=bigHTML(fmt(prim.target-now));
-      sub.innerHTML=wdlTxt; sm.innerHTML=`Ganado hoy: <b>${eur}</b>`;
-    }
+  if(state.showNextWorkday){
+    rot.textContent=''; big.innerHTML=`Descanso${HEART}`;
+    sub.innerHTML=''; sm.innerHTML='';
+    prog.classList.remove('on');
+  }else if(prim.fase==='antes'){
+    rot.textContent='Entras en'; big.innerHTML=bigHTML(fmt(prim.target-now));
+    sub.innerHTML=wdlTxt; sm.innerHTML=`Ganado hoy: <b>${eur}</b>`;
     prog.classList.remove('on');
   }else if(prim.fase==='dentro'){
     rot.textContent='Sales en'; big.innerHTML=bigHTML(fmt(prim.target-now));
@@ -578,24 +576,13 @@ function render(){
     prog.classList.add('on');
   }else if(prim.fase==='siguiente'){
     prog.classList.remove('on');
-    if(state.showNextWorkday){
-      rot.textContent='Descansa'; big.innerHTML=bigHTML(fmt(prim.target-now));
-      sub.innerHTML=`Te mereces este descanso${HEART}`;
-      sm.innerHTML=`Vuelves el ${DIASL[prim.target.getDay()]} a las ${prim.target.toTimeString().slice(0,5)}`;
-    }else{
-      rot.textContent='Próximo turno'; big.innerHTML=bigHTML(fmt(prim.target-now));
-      sub.innerHTML=`${DIASL[prim.target.getDay()]} a las ${prim.target.toTimeString().slice(0,5)} · ${wdlTxt}`;
-      sm.innerHTML=earn>0?`Ganado hoy: <b>${eur}</b>`:'';
-    }
+    rot.textContent='Próximo turno'; big.innerHTML=bigHTML(fmt(prim.target-now));
+    sub.innerHTML=`${DIASL[prim.target.getDay()]} a las ${prim.target.toTimeString().slice(0,5)} · ${wdlTxt}`;
+    sm.innerHTML=earn>0?`Ganado hoy: <b>${eur}</b>`:'';
   }else{
     prog.classList.remove('on');
-    if(state.showNextWorkday){
-      rot.textContent='Descansa'; big.textContent='—';
-      sub.innerHTML=`Disfruta${HEART}`; sm.innerHTML='Sin turnos programados';
-    }else{
-      rot.textContent='Sin turnos'; big.textContent='—';
-      sub.innerHTML=''; sm.innerHTML='Configura tu horario laboral abajo.';
-    }
+    rot.textContent='Sin turnos'; big.textContent='—';
+    sub.innerHTML=''; sm.innerHTML='Configura tu horario laboral abajo.';
   }
   if(state.hourlyColor && now.getHours()!==lastHourColor){ lastHourColor=now.getHours(); hourAcc=null; document.documentElement.style.setProperty('--accent',pickHourAccent()); }
   autoPhraseTick(now);
