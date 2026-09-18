@@ -112,9 +112,9 @@
   .panel .body{padding:0 0 18px;display:flex;flex-direction:column;gap:16px}
 
   .dias{display:flex;flex-direction:column;gap:10px}
-  .dia{display:grid;grid-template-columns:36px 44px 1fr 1fr;gap:9px;align-items:center}
+  .dia{display:grid;grid-template-columns:1fr 44px auto auto auto;gap:9px;align-items:center}
   .dia .nom{font-size:15px}
-  .dia input[type=time]{width:100%}
+  .dia input[type=time]{width:auto}
   .dia.off .nom{opacity:.4}
   .sw{position:relative;width:44px;height:26px;flex:0 0 auto}
   .sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
@@ -311,8 +311,25 @@
       <div class="vacio">Activa cada día y pon la hora de entrada y de salida. Se guarda solo.</div>
       <label class="toggle-row"><span>Modo descanso</span>
         <span class="sw"><input type="checkbox" id="tgNext"><span class="knob"></span></span></label>
-      <label class="field">€ por hora
-        <input type="number" id="rate" min="0" step="0.5" style="width:110px"></label>
+      <div class="field">€ por hora
+        <span style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <input type="number" id="rate" min="0" step="0.5" style="width:110px">
+          <button class="icon-btn" id="rateEye" aria-label="Mostrar u ocultar el precio"></button>
+        </span></div>
+    </div>
+  </details>
+
+  <details class="panel" id="zOverride">
+    <summary>Cambio de horario puntual</summary>
+    <div class="body">
+      <div class="row">
+        <input type="date" id="ovDate" aria-label="Día">
+        <input type="time" id="ovIn" aria-label="Entrada">
+        <input type="time" id="ovOut" aria-label="Salida">
+        <button class="primary" id="addOv">Añadir</button>
+      </div>
+      <div class="lista" id="listaOv"></div>
+      <div class="vacio">Cambia la hora de un día concreto (horas extra antes o después). Solo afecta a la cuenta atrás, no al dinero.</div>
     </div>
   </details>
 
@@ -392,6 +409,33 @@
     </div>
   </details>
 
+  <details class="panel" id="zFree">
+    <summary>Horas libres</summary>
+    <div class="body">
+      <div class="gtot">Acumuladas: <b id="freeTot">0 h</b></div>
+      <div class="row">
+        <input type="number" id="freeAdd" step="0.5" placeholder="Horas">
+        <button class="primary" id="freeAddBtn">Sumar</button>
+        <button class="ghost" id="freeSubBtn">Restar</button>
+      </div>
+      <div class="row"><button class="link" id="freeReset">Poner a cero</button></div>
+      <div class="vacio">Para cambiar por descanso.</div>
+    </div>
+  </details>
+
+  <details class="panel" id="zTickets">
+    <summary>Tickets</summary>
+    <div class="body">
+      <div class="gtot">Total: <b id="tkTot">0</b></div>
+      <div class="row">
+        <input type="date" id="tkDate" aria-label="Día">
+        <input type="number" id="tkN" min="0" placeholder="Nº tickets" style="width:120px">
+        <button class="primary" id="addTk">Añadir</button>
+      </div>
+      <div class="lista" id="listaTk"></div>
+    </div>
+  </details>
+
   <div class="barra-inf" id="zBarra">
     <button class="ghost" id="btnFocus">
       <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Pantalla completa</button>
@@ -422,7 +466,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='2.8';
+const VER_NUM='3.0';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -447,18 +491,30 @@ const DEFAULT={
     sab:{on:false,in:'09:00',out:'17:00'} },
   timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false, myPhrases:[], phraseAuto:false,
   counters:{EP:0,SOC:0,NOC:0}, hourlyColor:false,
-  breaks:[], breakColor:false, breakLead:30, rate:9, earningsSaved:0
+  breaks:[], breakColor:false, breakLead:30, rate:9, earningsSaved:0, hideRate:false, overrides:[], freeHours:0, tickets:[]
 };
 let state=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),store.get()||{});
-DIAS.forEach(([k])=>{ state.schedule[k]=Object.assign({on:false,in:'09:00',out:'17:00'},state.schedule[k]||{}); });
-if(!Array.isArray(state.palettes)||!state.palettes.length) state.palettes=JSON.parse(JSON.stringify(DEFAULT.palettes));
-state.counters=Object.assign({EP:0,SOC:0,NOC:0},state.counters||{});
-if(!Array.isArray(state.breaks)) state.breaks=[];
+function normalizeState(){
+  if(!state.schedule||typeof state.schedule!=='object') state.schedule={};
+  DIAS.forEach(([k])=>{ state.schedule[k]=Object.assign({on:false,in:'09:00',out:'17:00'},state.schedule[k]||{}); });
+  if(!Array.isArray(state.palettes)||!state.palettes.length) state.palettes=JSON.parse(JSON.stringify(DEFAULT.palettes));
+  state.counters=Object.assign({EP:0,SOC:0,NOC:0},state.counters||{});
+  if(!Array.isArray(state.breaks)) state.breaks=[];
+  if(!Array.isArray(state.timers)) state.timers=[];
+  if(!Array.isArray(state.myPhrases)) state.myPhrases=[];
+  if(!Array.isArray(state.labelsUsed)) state.labelsUsed=[];
+  if(!Array.isArray(state.overrides)) state.overrides=[];
+  if(!Array.isArray(state.tickets)) state.tickets=[];
+  if(typeof state.freeHours!=='number') state.freeHours=0;
+}
+normalizeState();
 function save(){ store.set(state); }
 
 /* ===== Tiempo ===== */
 function atToday(base,hm){ const d=new Date(base); const [h,m]=hm.split(':').map(Number); d.setHours(h,m,0,0); return d; }
 function keyOf(d){ return DIAS[d.getDay()][0]; }
+function ymd(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function cfgFor(d){ const ov=(state.overrides||[]).find(o=>o.date===ymd(d)); return ov?{on:true,in:ov.in,out:ov.out}:state.schedule[keyOf(d)]; }
 // Devuelve {main, sec}: main sin segundos, sec = segundos (para mostrarlos tenues)
 function fmt(ms){
   if(ms<0) ms=0;
@@ -470,7 +526,7 @@ function fmt(ms){
 function nextShift(from){
   for(let i=0;i<8;i++){
     const d=new Date(from); d.setDate(d.getDate()+i);
-    const cfg=state.schedule[keyOf(d)]; if(!cfg||!cfg.on) continue;
+    const cfg=cfgFor(d); if(!cfg||!cfg.on) continue;
     const ini=atToday(d,cfg.in); if(i===0&&ini<=from) continue;
     return {inicio:ini,cfg};
   } return null;
@@ -500,7 +556,7 @@ function nextOccur(t,now){
   } return d;
 }
 function computePrimary(now){
-  const cfg=state.schedule[keyOf(now)];
+  const cfg=cfgFor(now);
   if(cfg&&cfg.on){
     const ini=atToday(now,cfg.in), fin=atToday(now,cfg.out);
     if(now<ini) return {fase:'antes',target:ini,ini,fin};
@@ -594,6 +650,9 @@ function loop(){ const s=Math.floor(Date.now()/200); if(s!==last){ last=s; rende
 
 /* ===== Cuentas puntuales ===== */
 const TRASH='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+const COPY='<svg viewBox="0 0 24 24"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg>';
+const EYE_OPEN='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_CLOSED='<svg viewBox="0 0 24 24"><path d="M4 4l16 16"/><path d="M2 12s3.5-7 10-7c2.2 0 4 .7 5.5 1.6M22 12s-3.5 7-10 7c-2.2 0-4-.7-5.5-1.6"/></svg>';
 const RECUR_TXT={none:'',daily:'cada día',weekly:'cada semana',monthly:'cada mes',yearly:'cada año'};
 const DUP='<svg viewBox="0 0 24 24"><path d="M9 9h11v11H9zM5 15H4V4h11v1"/></svg>';
 function renderTimers(now){
@@ -648,11 +707,16 @@ function buildDias(){
     row.innerHTML=`<span class="nom">${nom}</span>
       <label class="sw"><input type="checkbox" ${c.on?'checked':''} data-k="${k}" data-f="on"><span class="knob"></span></label>
       <input type="time" value="${c.in}" data-k="${k}" data-f="in">
-      <input type="time" value="${c.out}" data-k="${k}" data-f="out">`;
+      <input type="time" value="${c.out}" data-k="${k}" data-f="out">
+      <button class="icon-btn dupday" data-k="${k}" aria-label="Duplicar este horario a los demás días">${COPY}</button>`;
     cont.appendChild(row);
   });
   cont.querySelectorAll('input').forEach(inp=>inp.onchange=()=>{
     const {k,f}=inp.dataset; state.schedule[k][f]=f==='on'?inp.checked:inp.value; save(); buildDias(); });
+  cont.querySelectorAll('.dupday').forEach(b=>b.onclick=()=>{
+    const src=state.schedule[b.dataset.k];
+    DIAS.forEach(([k2])=>{ if(k2!==b.dataset.k){ state.schedule[k2].in=src.in; state.schedule[k2].out=src.out; } });
+    save(); buildDias(); });
 }
 const tgNext=document.getElementById('tgNext');
 tgNext.checked=!!state.showNextWorkday;
@@ -660,6 +724,10 @@ tgNext.onchange=()=>{ state.showNextWorkday=tgNext.checked; save(); };
 const rateInp=document.getElementById('rate');
 rateInp.value = state.rate!=null ? state.rate : 9;
 rateInp.onchange=()=>{ state.rate=Math.max(0,+rateInp.value||0); save(); };
+function applyRateMask(){ const inp=document.getElementById('rate'), b=document.getElementById('rateEye');
+  if(state.hideRate){ inp.type='password'; b.innerHTML=EYE_CLOSED; } else { inp.type='number'; b.innerHTML=EYE_OPEN; } }
+document.getElementById('rateEye').onclick=()=>{ state.hideRate=!state.hideRate; save(); applyRateMask(); };
+applyRateMask();
 function earningsToday(now){
   const cfg=state.schedule[keyOf(now)]; if(!cfg||!cfg.on) return 0;
   const ini=atToday(now,cfg.in), fin=atToday(now,cfg.out);
@@ -791,10 +859,14 @@ function buildBrk(){
   (state.breaks||[]).forEach((b,i)=>{
     const card=document.createElement('div'); card.className='card';
     card.innerHTML=`<div class="txt"><div class="lbl">${DIAS[b.day][1]} · ${b.time}</div><div class="meta">${b.dur} min</div></div>
-      <button class="icon-btn" data-i="${i}" aria-label="Borrar">${TRASH}</button>`;
+      <button class="icon-btn dupb" data-i="${i}" aria-label="Duplicar">${COPY}</button>
+      <button class="icon-btn del" data-i="${i}" aria-label="Borrar">${TRASH}</button>`;
     cont.appendChild(card);
   });
-  cont.querySelectorAll('.icon-btn').forEach(bt=>bt.onclick=()=>{ state.breaks.splice(+bt.dataset.i,1); save(); buildBrk(); });
+  cont.querySelectorAll('.del').forEach(bt=>bt.onclick=()=>{ state.breaks.splice(+bt.dataset.i,1); save(); buildBrk(); });
+  cont.querySelectorAll('.dupb').forEach(bt=>bt.onclick=()=>{ const b=state.breaks[+bt.dataset.i];
+    document.getElementById('brkDay').value=b.day; document.getElementById('brkTime').value=b.time; document.getElementById('brkDur').value=b.dur;
+    document.getElementById('brkDay').focus(); });
   const tg=document.getElementById('tgBrkColor'); tg.checked=!!state.breakColor;
   tg.onchange=()=>{ state.breakColor=tg.checked; save(); };
   const ld=document.getElementById('brkLead'); ld.value=state.breakLead||30;
@@ -818,11 +890,16 @@ document.getElementById('fileImport').onchange=e=>{
   const file=e.target.files[0]; if(!file) return; const r=new FileReader();
   r.onload=()=>{ try{
       const d=JSON.parse(r.result);
-      if(d.schedule)state.schedule=d.schedule; if(d.timers)state.timers=d.timers;
-      if(d.colors)state.colors=d.colors; if(d.palettes)state.palettes=d.palettes;
-      if(d.labelsUsed)state.labelsUsed=d.labelsUsed;
-      DIAS.forEach(([k])=>{state.schedule[k]=Object.assign({on:false,in:'09:00',out:'17:00'},state.schedule[k]||{});});
-      save(); applyColors(); buildDias(); buildSug(); renderTimers(new Date());
+      if(!d||typeof d!=='object') throw new Error('bad');
+      state=Object.assign(JSON.parse(JSON.stringify(DEFAULT)), d);
+      normalizeState(); save();
+      document.getElementById('tgNext').checked=!!state.showNextWorkday;
+      document.getElementById('tgHora').checked=!!state.hourlyColor;
+      document.getElementById('tgPhraseAuto').checked=!!state.phraseAuto;
+      rateInp.value = state.rate!=null ? state.rate : 9;
+      applyColors(); buildDias(); buildSug(); renderTimers(new Date());
+      buildFrases(); buildCounters(); buildColas(); buildBrk(); buildGanancias(); buildOverrides(); buildFree(); buildTickets(); applyPhraseMode(); applyRateMask();
+      render();
     }catch(err){ alert('El archivo no es válido.'); } };
   r.readAsText(file); e.target.value='';
 };
@@ -1022,8 +1099,59 @@ document.getElementById('gToday').onclick=()=>{
   state.earningsSaved=Math.round(((state.earningsSaved||0)+t)*100)/100; save(); buildGanancias();
 };
 document.getElementById('gReset').onclick=()=>{ state.earningsSaved=0; save(); buildGanancias(); };
+/* ===== Cambio de horario puntual ===== */
+function buildOverrides(){
+  const cont=document.getElementById('listaOv'); cont.innerHTML='';
+  (state.overrides||[]).slice().sort((a,b)=>a.date<b.date?-1:1).forEach(o=>{
+    const [Y,M,D]=o.date.split('-'); const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="txt"><div class="lbl">${D}/${M}/${Y}</div><div class="meta">${o.in} – ${o.out}</div></div>
+      <button class="icon-btn del" data-d="${o.date}" aria-label="Borrar">${TRASH}</button>`;
+    cont.appendChild(card);
+  });
+  cont.querySelectorAll('.del').forEach(bt=>bt.onclick=()=>{ state.overrides=state.overrides.filter(o=>o.date!==bt.dataset.d); save(); buildOverrides(); });
+}
+document.getElementById('addOv').onclick=()=>{
+  const date=document.getElementById('ovDate').value, i=document.getElementById('ovIn').value, o=document.getElementById('ovOut').value;
+  if(!date||!i||!o) return;
+  state.overrides=(state.overrides||[]).filter(x=>x.date!==date); state.overrides.push({date,in:i,out:o});
+  save(); buildOverrides();
+  document.getElementById('ovDate').value=''; document.getElementById('ovIn').value=''; document.getElementById('ovOut').value='';
+};
+/* ===== Horas libres ===== */
+function buildFree(){ document.getElementById('freeTot').textContent=(state.freeHours||0).toLocaleString('es-ES')+' h'; }
+document.getElementById('freeAddBtn').onclick=()=>{ const v=+document.getElementById('freeAdd').value; if(!v) return;
+  state.freeHours=Math.round(((state.freeHours||0)+v)*100)/100; save(); buildFree(); document.getElementById('freeAdd').value=''; };
+document.getElementById('freeSubBtn').onclick=()=>{ const v=+document.getElementById('freeAdd').value; if(!v) return;
+  state.freeHours=Math.round(((state.freeHours||0)-v)*100)/100; save(); buildFree(); document.getElementById('freeAdd').value=''; };
+document.getElementById('freeReset').onclick=()=>{ state.freeHours=0; save(); buildFree(); };
+/* ===== Tickets ===== */
+function buildTickets(){
+  const cont=document.getElementById('listaTk'); cont.innerHTML=''; let tot=0;
+  (state.tickets||[]).slice().sort((a,b)=>a.date<b.date?1:-1).forEach(t=>{
+    tot+=(+t.n||0); const [Y,M,D]=t.date.split('-'); const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="txt"><div class="lbl">${D}/${M}/${Y}</div><div class="meta">${t.n} tickets</div></div>
+      <button class="icon-btn del" data-id="${t.id}" aria-label="Borrar">${TRASH}</button>`;
+    cont.appendChild(card);
+  });
+  document.getElementById('tkTot').textContent=tot;
+  cont.querySelectorAll('.del').forEach(bt=>bt.onclick=()=>{ state.tickets=state.tickets.filter(x=>x.id!==bt.dataset.id); save(); buildTickets(); });
+}
+document.getElementById('addTk').onclick=()=>{
+  const date=document.getElementById('tkDate').value, nv=document.getElementById('tkN').value, n=+nv;
+  if(!date||nv===''||!(n>=0)) return;
+  state.tickets=(state.tickets||[]); state.tickets.push({id:Date.now()+''+Math.floor(Math.random()*1000),date,n});
+  save(); buildTickets(); document.getElementById('tkDate').value=''; document.getElementById('tkN').value='';
+};
 
-applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); buildColas(); buildBrk(); buildGanancias(); applyPhraseMode(); render();
+/* ===== Auto-actualización entre versiones ===== */
+(function(){ try{
+  const base=location.pathname.split('?')[0];
+  fetch(base+'?_v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{
+    if(!t) return; const m=t.match(/VER_NUM='([^']+)'/);
+    if(m && m[1]!==VER_NUM) location.replace(base+'?v='+encodeURIComponent(m[1]));
+  }).catch(()=>{});
+}catch(e){} })();
+applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); buildColas(); buildBrk(); buildGanancias(); buildOverrides(); buildFree(); buildTickets(); applyPhraseMode(); render();
 window.addEventListener('load',()=>{
   setTimeout(()=>document.getElementById('loader').classList.add('hide'),800);
   if(!state.tutorialSeen) setTimeout(startTut,1200);
