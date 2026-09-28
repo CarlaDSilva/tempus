@@ -86,9 +86,9 @@
 
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   input,button,select{font-family:inherit;font-size:16px;color:var(--ink)}
-  input[type=text],input[type=datetime-local],input[type=time],input[type=number]{
+  input[type=text],input[type=datetime-local],input[type=time],input[type=date],input[type=number]{
     background:var(--surface);border:1px solid var(--line);border-radius:10px;
-    padding:11px 12px;color:var(--ink);min-width:0}
+    padding:11px 12px;color:var(--ink);min-width:0;color-scheme:dark}
   input[type=text]{flex:1}
   select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--ink)}
   input[type=color]{width:48px;height:40px;border:1px solid var(--line);border-radius:10px;
@@ -436,6 +436,15 @@
     </div>
   </details>
 
+  <details class="panel" id="zPantalla">
+    <summary>Pantalla</summary>
+    <div class="body">
+      <label class="toggle-row"><span>Mantener la pantalla encendida</span>
+        <span class="sw"><input type="checkbox" id="tgAwake"><span class="knob"></span></span></label>
+      <div class="vacio">Evita que la pantalla se apague mientras usas Tempus, también en vista normal.</div>
+    </div>
+  </details>
+
   <div class="barra-inf" id="zBarra">
     <button class="ghost" id="btnFocus">
       <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Pantalla completa</button>
@@ -448,6 +457,7 @@
 
   <div class="footer">
     <span id="ver">—</span>
+    <button class="link" id="btnUpd">Buscar actualización</button>
     <button class="link" id="btnTutorial">Tutorial</button>
   </div>
 
@@ -466,7 +476,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='3.0';
+const VER_NUM='3.2';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -491,7 +501,7 @@ const DEFAULT={
     sab:{on:false,in:'09:00',out:'17:00'} },
   timers:[], labelsUsed:[], tutorialSeen:false, showNextWorkday:false, myPhrases:[], phraseAuto:false,
   counters:{EP:0,SOC:0,NOC:0}, hourlyColor:false,
-  breaks:[], breakColor:false, breakLead:30, rate:9, earningsSaved:0, hideRate:false, overrides:[], freeHours:0, tickets:[]
+  breaks:[], breakColor:false, breakLead:30, rate:9, earningsSaved:0, hideRate:false, overrides:[], freeHours:0, tickets:[], keepAwake:true
 };
 let state=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),store.get()||{});
 function normalizeState(){
@@ -906,16 +916,28 @@ document.getElementById('fileImport').onchange=e=>{
 
 /* ===== Pantalla completa + no apagar pantalla ===== */
 let wakeLock=null;
-async function acquireWake(){ try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch(e){} }
+async function acquireWake(){ try{ if(state.keepAwake!==false && 'wakeLock' in navigator && document.visibilityState==='visible'){ wakeLock=await navigator.wakeLock.request('screen'); if(wakeLock&&wakeLock.addEventListener) wakeLock.addEventListener('release',()=>{ wakeLock=null; }); } }catch(e){} }
 async function releaseWake(){ try{ if(wakeLock){ await wakeLock.release(); wakeLock=null; } }catch(e){} }
-document.addEventListener('visibilitychange',()=>{
-  if(document.body.classList.contains('focus')&&document.visibilityState==='visible') acquireWake(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') acquireWake(); });
+document.addEventListener('click',()=>{ if(!wakeLock) acquireWake(); },{passive:true});
+const tgAwake=document.getElementById('tgAwake');
+tgAwake.checked=state.keepAwake!==false;
+tgAwake.onchange=()=>{ state.keepAwake=tgAwake.checked; save(); if(state.keepAwake) acquireWake(); else releaseWake(); };
+document.getElementById('btnUpd').onclick=()=>{
+  const base=location.pathname.split('?')[0], b=document.getElementById('btnUpd'); b.textContent='Buscando…';
+  fetch(base+'?_v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{
+    const m=t&&t.match(/VER_NUM='([^']+)'/);
+    if(m && m[1]!==VER_NUM){ location.replace(base+'?v='+encodeURIComponent(m[1])); }
+    else { b.textContent='Ya al día'; setTimeout(()=>b.textContent='Buscar actualización',2000); }
+  }).catch(()=>{ b.textContent='Sin conexión'; setTimeout(()=>b.textContent='Buscar actualización',2000); });
+};
 document.getElementById('btnFocus').onclick=async()=>{
   document.body.classList.add('focus');
   try{ await document.documentElement.requestFullscreen(); }catch(e){} acquireWake(); };
 document.getElementById('salirFocus').onclick=async()=>{
   document.body.classList.remove('focus');
-  try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){} releaseWake(); };
+  try{ if(document.fullscreenElement) await document.exitFullscreen(); }catch(e){} acquireWake(); };
+acquireWake();
 
 /* ===== Manifiesto en línea ===== */
 (function(){
