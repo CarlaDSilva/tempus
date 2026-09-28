@@ -476,7 +476,7 @@
 
 <script>
 /* ===== Versión (número técnico + paleta activa) ===== */
-const VER_NUM='3.2';
+const VER_NUM='3.3';
 
 /* ===== Almacenamiento con reserva en memoria ===== */
 const KEY='tempus_v1', mem={};
@@ -1165,14 +1165,7 @@ document.getElementById('addTk').onclick=()=>{
   save(); buildTickets(); document.getElementById('tkDate').value=''; document.getElementById('tkN').value='';
 };
 
-/* ===== Auto-actualización entre versiones ===== */
-(function(){ try{
-  const base=location.pathname.split('?')[0];
-  fetch(base+'?_v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():null).then(t=>{
-    if(!t) return; const m=t.match(/VER_NUM='([^']+)'/);
-    if(m && m[1]!==VER_NUM) location.replace(base+'?v='+encodeURIComponent(m[1]));
-  }).catch(()=>{});
-}catch(e){} })();
+/* Actualización solo manual (botón "Buscar actualización"): la recarga automática apagaba la pantalla en iOS */
 applyColors(); buildTicks(); buildDias(); buildSug(); buildFrases(); buildCounters(); buildColas(); buildBrk(); buildGanancias(); buildOverrides(); buildFree(); buildTickets(); applyPhraseMode(); render();
 window.addEventListener('load',()=>{
   setTimeout(()=>document.getElementById('loader').classList.add('hide'),800);
